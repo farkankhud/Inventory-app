@@ -1,0 +1,4 @@
+ID;name;code;listPrice;price;discount;stock;reorderLevel;validFrom;validTo;supplierEmail;status;category_ID
+9f14e45f-ceea-467e-bd3f-b45f6cd8b201;Wireless Mouse;PROD-0001;24.99;19.99;10.00;150;20;2026-01-01;2027-12-31;supplier1@example.com;ACTIVE;8f14e45f-ceea-467e-bd3f-b45f6cd8b1b1
+9f14e45f-ceea-467e-bd3f-b45f6cd8b202;Mechanical Keyboard;PROD-0002;99.00;89.50;0.00;60;15;2026-01-01;2027-12-31;supplier1@example.com;ACTIVE;8f14e45f-ceea-467e-bd3f-b45f6cd8b1b1
+9f14e45f-ceea-467e-bd3f-b45f6cd8b203;Notebook A5;PROD-0003;4.00;3.25;5.00;500;50;2026-01-01;2027-12-31;supplier2@example.com;ACTIVE;8f14e45f-ceea-467e-bd3f-b45f6cd8b1b2

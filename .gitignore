@@ -1,0 +1,11 @@
+node_modules/
+gen/
+*.db
+*.sqlite
+db.sqlite
+.env
+.cdsrc-private.json
+default-*.json
+*.log
+.DS_Store
+dist/
