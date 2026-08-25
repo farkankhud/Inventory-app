@@ -1,0 +1,144 @@
+_schema-version: 3.3.0
+ID: inventory-app
+version: 1.0.0
+description: "Simple CAP app with DB-level validation, actions and functions"
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: inventory-app-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: inventory-app-auth
+      - name: inventory-app-db
+      - name: inventory-app-destination
+
+  - name: inventory-app-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: inventory-app-db
+
+  - name: inventory-app-app-deployer
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: inventoryappproductsapp
+          artifacts:
+            - productsapp.zip
+          target-path: app/
+    requires:
+      - name: inventory-app-auth
+      - name: srv-api
+      - name: inventory-app-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+    parameters:
+      config:
+        destinations:
+          - Name: srv-api
+            URL: ~{srv-api/srv-url}
+            Authentication: NoAuthentication
+            Type: HTTP
+            ProxyType: Internet
+            HTML5.ForwardAuthToken: true
+            HTML5.DynamicDestination: true
+
+  - name: inventoryappproductsapp
+    type: html5
+    path: app/productsapp
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+
+  - name: inventory-app-destinations
+    type: com.sap.application.content
+    requires:
+      - name: inventory-app-auth
+        parameters:
+          service-key:
+            name: inventory-app-auth-key
+      - name: inventory-app-html5-repo-host
+        parameters:
+          service-key:
+            name: inventory-app-html5-repo-host-key
+      - name: srv-api
+      - name: inventory-app-destination
+        parameters:
+          content-target: true
+    build-parameters:
+      no-source: true
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: inventory-app-html5-repository
+              ServiceInstanceName: inventory-app-html5-repo-host
+              ServiceKeyName: inventory-app-html5-repo-host-key
+              sap.cloud.service: inventoryapp.service
+            - Name: inventory-app-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: inventory-app-auth
+              ServiceKeyName: inventory-app-auth-key
+              sap.cloud.service: inventoryapp.service
+
+resources:
+  - name: inventory-app-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: inventory-app-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+  - name: inventory-app-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+  - name: inventory-app-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+    requires:
+      - name: srv-api
+
+  - name: inventory-app-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
