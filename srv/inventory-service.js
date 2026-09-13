@@ -14,7 +14,7 @@ module.exports = cds.service.impl(async function () {
   });
 
   this.on('discontinue', Products, async (req) => {
-    const sam;
+    
     const id = req.params[0].ID;
     const p = await SELECT.one.from(Products, id);
     if (p.stock > 0) return req.reject(400, `Cannot discontinue: ${p.stock} units still in stock`);
