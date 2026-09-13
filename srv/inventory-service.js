@@ -8,7 +8,7 @@ module.exports = cds.service.impl(async function () {
   const { Products } = this.entities;
 
   this.on('restock', Products, async (req) => {
-    const test1;
+    const test;
     const id = req.params[0].ID;
     await UPDATE(Products, id).with({ stock: { '+=': req.data.quantity } });
     return SELECT.one.from(Products, id);
